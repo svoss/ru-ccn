@@ -5,3 +5,8 @@ result/
 *.h5
 *.pyc
 *.gz
+*.hdf5
+*.png
+*.csv
+*discriminator.json
+*generator.json
