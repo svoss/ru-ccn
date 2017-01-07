@@ -1,0 +1,76 @@
+{
+    "config": {
+        "distribution_output": "tanh",
+        "gradient_clipping": 10,
+        "learning_rate": 0.001,
+        "momentum": 0.5,
+        "ndim_input": 50,
+        "ndim_output": 784,
+        "nonlinearity": "relu",
+        "optimizer": "Adam",
+        "use_weightnorm": false,
+        "weight_decay": 0,
+        "weight_init_std": 1,
+        "weight_initializer": "GlorotNormal"
+    },
+    "model": {
+        "layers": [
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": 50,
+                "nobias": false,
+                "out_size": 500,
+                "use_weightnorm": false
+            },
+            {
+                "_layer": "BatchNormalization",
+                "decay": 0.9,
+                "eps": 2e-05,
+                "size": 500,
+                "use_beta": true,
+                "use_cudnn": true,
+                "use_gamma": true
+            },
+            {
+                "_function": "relu",
+                "use_cudnn": true
+            },
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": null,
+                "nobias": false,
+                "out_size": 500,
+                "use_weightnorm": false
+            },
+            {
+                "_layer": "BatchNormalization",
+                "decay": 0.9,
+                "eps": 2e-05,
+                "size": 500,
+                "use_beta": true,
+                "use_cudnn": true,
+                "use_gamma": true
+            },
+            {
+                "_function": "relu",
+                "use_cudnn": true
+            },
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": null,
+                "nobias": false,
+                "out_size": 784,
+                "use_weightnorm": false
+            },
+            {
+                "_function": "tanh",
+                "use_cudnn": true
+            }
+        ],
+        "weight_init_std": 1,
+        "weight_initializer": "GlorotNormal"
+    }
+}

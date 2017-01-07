@@ -1,0 +1,7 @@
+*.DS_Store
+env/
+result/
+*.idea/
+*.h5
+*.pyc
+*.gz

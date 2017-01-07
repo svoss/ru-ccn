@@ -1,0 +1,83 @@
+{
+    "config": {
+        "gradient_clipping": 10,
+        "learning_rate": 0.001,
+        "momentum": 0.5,
+        "ndim_input": 784,
+        "ndim_output": 10,
+        "nonlinearity": "softplus",
+        "optimizer": "Adam",
+        "use_feature_matching": true,
+        "use_minibatch_discrimination": false,
+        "use_weightnorm": false,
+        "weight_decay": 0,
+        "weight_init_std": 1,
+        "weight_initializer": "GlorotNormal"
+    },
+    "model": {
+        "layers": [
+            {
+                "_function": "gaussian_noise",
+                "std": 0.3
+            },
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": 784,
+                "nobias": false,
+                "out_size": 1000,
+                "use_weightnorm": false
+            },
+            {
+                "_function": "gaussian_noise",
+                "std": 0.5
+            },
+            {
+                "_function": "softplus",
+                "use_cudnn": true
+            },
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": null,
+                "nobias": false,
+                "out_size": 500,
+                "use_weightnorm": false
+            },
+            {
+                "_function": "gaussian_noise",
+                "std": 0.5
+            },
+            {
+                "_function": "softplus",
+                "use_cudnn": true
+            },
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": null,
+                "nobias": false,
+                "out_size": 250,
+                "use_weightnorm": false
+            },
+            {
+                "_function": "gaussian_noise",
+                "std": 0.5
+            },
+            {
+                "_function": "softplus",
+                "use_cudnn": true
+            },
+            {
+                "_layer": "Linear",
+                "bias": 0,
+                "in_size": null,
+                "nobias": false,
+                "out_size": 10,
+                "use_weightnorm": false
+            }
+        ],
+        "weight_init_std": 1,
+        "weight_initializer": "GlorotNormal"
+    }
+}
