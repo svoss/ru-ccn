@@ -8,5 +8,6 @@ result/
 *.hdf5
 *.png
 *.csv
+*.npz
 *discriminator.json
 *generator.json
