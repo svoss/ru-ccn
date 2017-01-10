@@ -11,7 +11,9 @@ parser.add_argument("-l", "--num_labeled", type=int, default=100)
 parser.add_argument("-s", "--seed", type=int, default=None)
 
 #Added for ability to continue training later on
-parser.add_argument("-e", "--start-epoch", type=int, default=1)
+parser.add_argument("-i", "--start-epoch", type=int, default=1)
+#Want to run with less epochs
+parser.add_argument("-e", "--max-epochs", type=int, default=1000)
 #This makes it work in notebooks
 parser.add_argument("-f","--file",type=str)
 

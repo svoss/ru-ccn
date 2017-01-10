@@ -35,7 +35,7 @@ def main():
     # _l -> labeled
     # _u -> unlabeled
     # _g -> generated
-    max_epoch = 1000
+    max_epoch = args.max_epochs
     num_trains_per_epoch = 500
     plot_interval = 5
     batchsize_l = 100
