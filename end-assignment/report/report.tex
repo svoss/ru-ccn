@@ -1,0 +1,146 @@
+\documentclass[a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{longtable}
+
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{listings}
+\usepackage{courier}
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{float}
+\usepackage{apacite}
+\usepackage{pdfpages}
+
+\title{Vulnerability of generative adversarial networks to adversarial images \\ \small{Cognitive computational neuroscience - Final assignment}}
+\author{Stijn Voss, s4150511}
+\date{January 2017}
+
+\begin{document}
+
+\maketitle
+\abstract{\noindent In this assignment I will compare the vulnerability to adversarial examples of discriminators trained by generative adversarial networks to the vulnerability of supervised trained models. I find some interesting evidence that suggests that indeed generative trained models might be less vulnerable for adversarial examples.  }
+\section{Introduction}
+The rise of deep learning techniques has lead to enormousness improvements in the machine learning field. However there still seems to be a lot of differences between the way our brain learns and the way these algorithms learn. A deep neural network is capable of learning low level features and hierarchical patterns in the data by giving it a lot of labeled examples\cite{yosinski2015understanding}. Our brain however is not provided with so many labeled examples: it seems to figure out the patterns in our world from the data itself.
+\subsection{Generative adversarial networks}
+Recently a lot of techniques have been proposed to learn data distributions in an (semi-) or un-supervised manner. Most notably Variational autoencoders\cite{kingma2013auto} and Generative adversarial nets(GAN)\cite{goodfellow2014generative}. A GAN consists of a Generator net, that produces a sample from the data distribution given a random noise input and a Discriminator that tries to distinguish samples from the dataset and from the generator. Both networks are then trained while competing against each other. GAN’s especially perform well on image data and have been applied to different image datasets\cite{radford2015unsupervised,salimans2016improved}. \\ \\
+The intuition is that the weights learned by the generator are related to the patterns for a traditional classifier network. Where traditional networks work by going from low-level features to high-level features, the generator would go the from high level to low level. Sadly the generators weights of a GAN cannot be converted so easily to be used in a classifier network. Although some solutions have been proposed\cite{donahue2016adversarial}.  \\ \\
+Other efforts to minimize the need for labeled data make use of the discriminator. Instead of letting the discriminator choose between real or fake, these semi-supervised methods \cite{odena2016semi} let the discriminator choose between one of the original classification labels or fake. Since the generator will try to generate similar images the discriminator can be trained with way less labeled data.
+
+\subsection{Adversarial images}\label{sec:introadv}
+\citeA{szegedy2013intriguing} showed that deep convolutional networks have some very interesting properties. Networks can be tricked in wrongly classifying a synthetically modified image with quit some confidence.  For humans such an image looks a lot like the original image, however the network classifies the image as something entirely different. \\ \\
+The problem of adversarial images is present in all types of machine learning algorithms and especially when these models tend to behave linearly, networks that use the sigmoid activation function are less vulnerable \cite{goodfellow2014explaining} for example. Furthermore those examples are universal across different models and not model specific. The same adversarial example is likely to fail in another network as long as it trained with the same or a subset of the same dataset. \\ \\
+Based on it's theoretical findings \citeA{goodfellow2014explaining} also proposed a simple method to generate adversarial images. Given an input \textbf{x} with corresponding target variable \textbf{y}, a model $\theta$ and loss function $J(\theta,x,y)$ we can calculate the gradient for the loss with respect to the input $\Delta_x J(\theta,x,y)$. In normal gradient descent we would make sure to minimize the loss, but here we will enlarge the loss on purpose. 
+$$
+x_{adv} = x + \epsilon sign(J(\theta,x,y))
+$$
+Where $x_{adv}$ will be our adversarial example. The loss gives us a sense of where we have to go to trick the network. Please note that we take the sign() of the gradient. We can interpret the result as the pixels we have to change in which direction.
+\begin{figure}[H]
+    \centering
+    \includegraphics{adv_example_goodfellow.png}
+    \caption{Example of adversarial example produced by method of \ref{sec:introadv} using the ImageNet network \cite{goodfellow2014explaining}}
+    \label{fig:adv_example_goodfellow}
+\end{figure}
+\subsection{Research}
+Some defense systems against adversarial neural networks actually use a generative approach. For example \cite{advexmlgan} show that one can actually train a network to generate adversarial examples. The generator of a normal GAN might actually be tempted to try to create adversarial images it self and try to trick the discriminator. In my research I want to compare the vulnerability of supervised trained networks to adversarial images with that of a GAN trained discriminator.   \\ \\
+To do so I will train both types of networks on the MNIST dataset. This is a simple dataset of 28x28 black and white images representing handwritten digits in the range from 0-9. The training set contains 60.000 samples where the test set contains 10.000 samples.  I will both train a discriminator using the GAN approach and a normal supervised network. Next I will 
+create adversarial examples using  the supervised learned model and compare the performance of the two networks on these examples. 
+\section{Experiments}
+
+\subsection{Generating the adversarial images}\label{sec:exsup}
+I started by generating some adversarial images, for this purpose I used the default MNIST implementation from the chainer tutorial\footnote{\url{https://github.com/pfnet/chainer/blob/master/examples/mnist/train_mnist.py}}. I adapted the network a bit such that it would correspond to the GAN discriminator. This is a simple fully connected neural network consisting of 3 hidden layers with 1000, 500 and 250 hidden units respectively. The networks has 756(28*28) units as input, the output layer consists of 10 units. \\ \\
+After I trained the network I could use the learned parameters to generate the images. For this I was inspired by the work of Robert Lacok \footnote{\url{https://github.com/robertlacok/mnist-adversarial-examples}}. Then for every image in the test set we:\\
+\begin{itemize}
+\item Forward it trough the network giving me the original probabilities and prediction
+\item Based on the corresponding target class calculate the gradient on the input
+\item For $\epsilon \in \{.1,.25,1.0\}$ calculate the new image using the method described in \ref{sec:introadv}. Each of these images are passed forward trough the network, giving me a loss, predicted label and confidence levels for each image and each $\epsilon$
+\end{itemize} 
+
+\noindent Note that we make sure that all adversarial images stay within the 0 and 1 range by setting all values lower then 0 to 0 and all values higher then 1 to 1. This way all images remain valid input. In figure \ref{fig:adv_image_1} and \ref{fig:adv_image_2} we show some adversarial examples. Please note that since MNIST data is binary and relatively low dimensional the changes noise added will be higher required to create adversarial examples than for example is the case for imagenet examples. \\ \\
+\noindent In general it seems that by humans images with $\epsilon \in \{0.1, 0.25\}$ are being observed as the same images as the original but with a bit of random noise, but it can be enough to trick the neural network. However $\epsilon = 1.0$ are completely unreadable. 
+\noindent We summarize  results over all images in table \ref{table:adv1}. For each value of $\epsilon$ we show the  accuracy(the fraction of the images that where classified correctly with the original image label) and the average confidence(the average max. probability).  
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}\hline
+\textbf{type} & \textbf{accuracy} & \textbf{avg. confidence}\\\hline
+$\epsilon = 0.00$ & 0.981 & 0.994\\\hline
+$\epsilon = 0.10$ & 0.537 & 0.956\\\hline
+$\epsilon = 0.25$ & 0.306 & 0.965\\\hline
+$\epsilon = 1.00$ & 0.142 & 0.988\\\hline
+\end{tabular}
+\caption{Results for different values of $\epsilon$ for a supervised trained neural network }
+\label{table:adv1}
+\end{table}
+\noindent We see that even with quit a small $\epsilon=0.1$ we can trick the network in miss classifying an additional 40\% of the images with quit a high confidence. For $\epsilon=0.25$ it's even worse. 
+
+\newpage
+\begin{figure}[H]
+\includegraphics{eps_1_wrong_a.png}
+\includegraphics{eps_1_wrong_b.png}
+\caption{Adversarial example images that where classified incorrectly starting from $\epsilon \geq 0.1$. Picked randomly from all available examples.We show the confidence in brackets, note that this number is rounded to two decimals. }\label{fig:adv_image_1}
+\end{figure}
+\begin{figure}[H]
+\includegraphics{eps_25_wrong_a.png}
+\includegraphics{eps_25_wrong_b.png}
+\caption{Images that where classified incorrectly starting from $\epsilon \geq 0.25$ Picked randomly from all available examples.We show the confidence in brackets, note that this number is rounded to two decimals.}\label{fig:adv_image_2}
+\end{figure}
+\newpage
+
+
+\subsection{Descriminator of the gan}
+We will now look into how our GAN trained discriminator performs. Sadly we cannot create adversarial images from the discriminator itself, for some reason the discriminator usually predicts with a very high confidence which results in a loss of 0.0 and no gradient. Luckily adversarial images tend to be universal for different models, so we will re-use the examples found in \ref{sec:exsup} and see how our generator performs on these examples.\\ \\
+First we have to learn our discriminator using the GAN method. To do this we use the chainer implementation\footnote{\url{https://github.com/musyoku/improved-gan}} of the work of \citeA{salimans2016improved}. Please note that one crucial difference between this network and the network learned in \ref{sec:exsup} gets floats between 0-1 as input where as the discriminator is trained 0-255 integer input.  \\ \\
+Next we forward all the images found in \ref{sec:exsup} trough our discriminator while calculating  predicted labels and confidence. Since the GAN training is very much focused on the generator the discriminator performs a bit poorly on the normal images. Therefore we also stopped training after 250 epoch instead of the original 1000, in this case the discriminator performs a bit better.  The results are summarized in table \ref{table:advgan1} and \ref{table:advgan2}. 
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}\hline
+\textbf{type} & \textbf{accuracy} & \textbf{avg. confidence}\\\hline
+$\epsilon = 0.00$ & 0.618 & 1.000\\\hline
+$\epsilon = 0.10$ & 0.554 & 1.000\\\hline
+$\epsilon = 0.25$ & 0.446 & 1.000\\\hline
+$\epsilon = 1.00$ & 0.154 & 1.000\\\hline
+\end{tabular}
+\caption{Results for different values of $\epsilon$ for a gan trained discriminator model with 1000 training epochs }
+\label{table:advgan1}
+\end{table}
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}\hline
+\textbf{type} & \textbf{accuracy} & \textbf{avg. confidence}\\\hline
+$\epsilon = 0.00$ & 0.768 & 1.000\\\hline
+$\epsilon = 0.10$ & 0.698 & 1.000\\\hline
+$\epsilon = 0.25$ & 0.525 & 1.000\\\hline
+$\epsilon = 1.00$ & 0.115 & 1.000\\\hline
+\end{tabular}
+\caption{Results for different values of $\epsilon$ for a gan trained  discriminator model with 250 training epochs }
+\label{table:advgan2}
+\end{table}
+\noindent The model performs way worse than the supervised model in general. It seems that in both cases the accuracy drops less hard when presented with the adversarial examples compared to the supervised example. In the case of the 1000 trained epoch model as shown in table \ref{table:advgan1} we see that $\epsilon = 0.25$ performs quit a bit better than it's supervise counter part. In the case of 250 epochs as shown in table \ref{table:advgan2} we see that it performs better for $\epsilon \in \{.1,.25\}$. 
+\section{Discussion and conclusion}
+Sadly the discriminator learned by our GAN performs worse than our supervised model by  a large margin. The code I used is mainly targeted at learning an effective generator, not at building a high quality classifier. This results in the poor performing discriminator which made my results a bit weaker. Due to the time constraints I had no time to look into the complicated GAN code and try to achieve better results. \\ \\
+\noindent However as far as I am concerned there is no reason why a network that performs worse on non-adversarial examples would automatically perform better on adversarial examples. So I think my evidence is still pretty strong. \\ \\
+\noindent A question that arises in the context of the course is if this also tells use something about how the brain learns, since the brain seems less vulnerable to adversarial examples. Of course it's very hard to give an answer to this question. The learned generator might just be tempted to generate adversarial examples and thus the discriminator learns to deal with them, but we can not say that this means that the brain is also generating images to learn the pattern. But I theorize that the brain is more involved in learning patterns and a model of the world for later predictions than just making classifications: it learns unsupervised. It could be that this difference is also responsible for the difference in vulnerability to adversarial examples. 
+
+\newpage
+\bibliographystyle{apacite}
+\bibliography{bib}
+\section{Code}
+My code consists of three notebooks: 
+\begin{itemize}
+\item \textbf{Training GAN} which trains the generator and discriminator. Since the model training is quit intensive i did the actual training on a PC with a GPU via a shell script. 
+\item \textbf{Training supervised} which trains the supervised network 
+\item \textbf{Adversarial images} which based on the trained models above will generate adversarial images and show obtain the results
+\end{itemize}
+\noindent
+The notebooks are attached in the same order below. All notebook can also be found in my repository for the CCN course: \url{https://github.com/svoss/ru-ccn/tree/master/end-assignment/notebooks}
+\newpage
+\end{document}
